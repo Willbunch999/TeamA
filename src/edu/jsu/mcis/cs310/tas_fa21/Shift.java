@@ -4,12 +4,11 @@
  * and open the template in the editor.
  */
 package edu.jsu.mcis.cs310.tas_fa21;
-import java.time.*;
 
 /**
  *
  * @author wabun
  */
-public class TAS {
-   
+public class Shift {
+    
 }
