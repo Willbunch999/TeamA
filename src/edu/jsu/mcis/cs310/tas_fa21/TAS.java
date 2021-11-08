@@ -5,6 +5,7 @@
  */
 package edu.jsu.mcis.cs310.tas_fa21;
 import java.time.*;
+import static java.time.temporal.ChronoUnit.MINUTES;
 import java.util.ArrayList;
 
 /**
@@ -13,9 +14,7 @@ import java.util.ArrayList;
  */
 public class TAS {
     public static void main(String[] args){
-        tasDatabase db = new tasDatabase();
-        Punch p = db.getPunch(3634);
-        System.out.println(p.toString());
+        
     }
     
     public static int calculateTotalMinutes(ArrayList<Punch> dailyPunchList, Shift shift){
@@ -26,15 +25,18 @@ public class TAS {
             Punch punch = dailyPunchList.get(i);
             PunchType punchID = punch.getPunchtypeid();
             
-            if ("CLOCK IN".equals(punchID.toString())){
-                shift.setStart(punch.getOriginalTimeStamp().toLocalTime());
-            } else if ("CLOCK OUT".equals(punchID.toString())){
-                punch.getOriginalTimeStamp();
-            } else if ("TIME OUT".equals(punchID.toString())){
-                punch.getOriginalTimeStamp();
-            } else {
-                    
+            if (punchID.toString() != "TIME OUT"){
+                try{
+                    if ("CLOCK IN".equals(punchID.toString())){
+                        shift.setStart(punch.getOriginalTimeStamp().toLocalTime());
+                    } else if ("CLOCK OUT".equals(punchID.toString())){
+                        shift.setStop(punch.getOriginalTimeStamp().toLocalTime());
+                    }  
+                }
+                catch(Exception e){}
             }
+            
+            totalMinutes += shift.getStart().until(shift.getStop(), MINUTES);
         }
        
         return totalMinutes;
