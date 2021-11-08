@@ -65,12 +65,12 @@ public class Shift {
         this.lunchDeduct = lunchDeduct;
     }
     
-    public void setLunchDuration(){
-        lunchDuration = Duration.between(lunchStart, lunchStop).toMinutes();
+    public void setLunchDuration(LocalTime lunchDuration){
+        this.lunchDuration = lunchDuration;
     }
     
-    public void setShiftDuration(){
-        shiftDuration = Duration.between(start, stop).toMinutes();
+    public void setShiftDuration(LocalTime shiftDuration){
+        this.shiftDuration = shiftDuration;
     }
         
     public int getID(){

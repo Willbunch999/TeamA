@@ -9,26 +9,34 @@ import java.util.ArrayList;
 
 /**
  *
- * @author wabun
+ * @author wabun, Stephen Thompson
  */
 public class TAS {
-   public static int calculateTotalMinutes(ArrayList<Punch> dailyPunchList, Shift shift){
+    public static void main(String[] args){
+        tasDatabase db = new tasDatabase();
+        Punch p = db.getPunch(3634);
+        System.out.println(p.toString());
+    }
+    
+    public static int calculateTotalMinutes(ArrayList<Punch> dailyPunchList, Shift shift){
        
-       int totalMinutes = 0;
+        int totalMinutes = 0;
        
-       for (int i = 0; i < dailyPunchList.size(); i++){
+        for (int i = 0; i < dailyPunchList.size(); i++){
             Punch punch = dailyPunchList.get(i);
             PunchType punchID = punch.getPunchtypeid();
-            if (punchID == CLOCK_IN){
-                ;
-            } else if (punchID == CLOCK_OUT){
-                ;
-            } else if (punchID == TIME_OUT){
-                ;
+            
+            if ("CLOCK IN".equals(punchID.toString())){
+                shift.setStart(punch.getOriginalTimeStamp().toLocalTime());
+            } else if ("CLOCK OUT".equals(punchID.toString())){
+                punch.getOriginalTimeStamp();
+            } else if ("TIME OUT".equals(punchID.toString())){
+                punch.getOriginalTimeStamp();
             } else {
                     
             }
-       }
-       return totalMinutes;
-   }
+        }
+       
+        return totalMinutes;
+    }
 }
