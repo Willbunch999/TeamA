@@ -1,370 +1,298 @@
 package edu.jsu.mcis.cs310.tas_fa21;
-
 import java.sql.*;
-import java.time.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.TemporalAdjusters;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.ArrayList;
 
-//Feature 1
-public class TasDatabase {
 
-    private Connection conn = null;
-    private String query;
-    private PreparedStatement prstSelect = null, prstUpdate = null;
-    private int updateCount;
+public class TASDatabase {
+    
+        private Connection conn = null;
+        private String query;
+        private PreparedStatement pstSelect = null, pstUpdate = null;
+        private ResultSet resultset = null;
+        private boolean hasresults;
+        private int updateCount;
 
-    public TasDatabase() {
-        try {
-            //This is used for to identify the server
-            String server = ("jdbc:mysql://localhost/tas_fa21_v1");
-            String userName = "tasuser";
-            String passWord = "bteam";
+	public TASDatabase(){
+		try {
+                    /* Identify the Server */
+                    
+                    String server = ("jdbc:mysql://localhost/tas");
+                    String username = "tas1user";
+                    String password = "teama";
+                    
+                    /* Load the MySQL JDBC Driver */
+            
+                    Class.forName("com.mysql.jdbc.Driver").newInstance();
+                    
+                    /* Open Connection */
 
-            //Opens the connection
-            this.conn = DriverManager.getConnection(server, userName, passWord);
-
-            if (!conn.isValid(0)) {
-                throw new SQLException();
+                    conn = DriverManager.getConnection(server, username, password);
+                    
+                    if(!conn.isValid(0)){
+                        throw new SQLException();
+                    }
+                }
+                catch(SQLException e){ System.out.println("SQL Connection failed! Invalid database setup?"); }
+                catch(ClassNotFoundException e){ System.out.println("JDBC driver not found, make sure MySQLDriver is added as a library!"); }
+                catch (Exception e){}
+	}
+	
+	public void close(){
+            try {
+                conn.close();
             }
-        } catch (SQLException e) {
-            System.out.println("");
-        } catch (Exception e) {
-        }
-    }
+            catch(SQLException e){}
+            finally{
+                if (resultset != null) { try { resultset.close(); resultset = null; } catch (SQLException e) {} }
+                if (pstSelect != null) { try { pstSelect.close(); pstSelect = null; } catch (SQLException e) {} }
+            }
+	}
+		
+	public Punch getPunch(int id){ // method of the database class and provide the punch ID as a parameter. 
+            Punch outputPunch;
+            
+            try{
+                
+                /*Prepare Select Query*/
+                query = "SELECT * FROM tas.punch WHERE id = " + id;
+                pstSelect = conn.prepareStatement(query);
+                
+                
+                /* Execute Select Query */
+                hasresults = pstSelect.execute();
+                
+                
+                while( hasresults || pstSelect.getUpdateCount() != -1 ){
+                    if (hasresults) {
+                        
+                        resultset = pstSelect.getResultSet();
+                        resultset.next();
+                        
+                        int terminalid = resultset.getInt("terminalid");
+                        String badgeid = resultset.getString("badgeid");
+                        long originaltimestamp = resultset.getTimestamp("originaltimestamp").getTime(); 
+                        int punchtypeid = resultset.getInt("punchtypeid");
+                        
+                        outputPunch = new Punch(getBadge(badgeid), terminalid, punchtypeid);
+                        outputPunch.setOriginalTimeStamp(originaltimestamp);
 
-    public void close() {
-        try {
-            conn.close();
-        } catch (SQLException e) {
-        } finally {
-            if (prstSelect != null) {
-                try {
-                    prstSelect.close();
-                    prstSelect = null;
-                } catch (SQLException e) {
+                        return outputPunch;
+                        
+                    }
+                }   
+            }
+            catch(SQLException e){System.out.println(e);}
+            
+            //Shouldn't be reached with a valid punch id
+            return null;
+	}
+	
+	public Badge getBadge(String id){  // method of the database class and provide the badge ID as a parameter.
+            Badge outputBadge;
+            
+            try {
+                /* Prepare Select Query */
+                
+                query = "SELECT * from tas.badge where id = \"" + id + "\"";
+                pstSelect = conn.prepareStatement(query);
+                
+                /* Execute Select Query */
+                hasresults = pstSelect.execute();
+                
+                while ( hasresults || pstSelect.getUpdateCount() != -1 ) {
+                    if ( hasresults ) {
+                        resultset = pstSelect.getResultSet();
+                        
+                        resultset.next();                        
+                        outputBadge = new Badge(resultset.getString("id"), resultset.getString("description"));
+                        
+                        return outputBadge;
+                    }
                 }
             }
-        }
-    }
-
-    public Punch getPunch(int punchid) {
-        Punch outputPunch = null;
-        try {
-            //Prepares the query
-            query = "SELECT * FROM punch WHERE id = ?";
-
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setInt(1, punchid);
-
-            //Executing the query
-            boolean hasResults = prstSelect.execute();
-
-            if (hasResults) {
-                ResultSet resultsSet = prstSelect.getResultSet();
-                resultsSet.next();
-
-                int terminalid = resultsSet.getInt("terminalId");
-                String badgeid = resultsSet.getString("badgeid");
-                Timestamp timestamp = resultsSet.getTimestamp("originaltimestamp");
-                LocalDateTime localstamp = timestamp.toLocalDateTime();
-                int punchtypeid = resultsSet.getInt("punchTypeId");
-
-                outputPunch = new Punch(terminalid, getBadge(badgeid), punchtypeid, localstamp);
-                outputPunch.setId(resultsSet.getInt("id"));
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return outputPunch;
-    }
-
-    public Badge getBadge(String id) {
-        Badge outputBadge = null;
-        try {
-            query = "SELECT * FROM badge WHERE id = ?";
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setString(1, id);
-
-            boolean hasResults = prstSelect.execute();
-
-            if (hasResults) {
-
-                ResultSet resultsSet = prstSelect.getResultSet();
-                resultsSet.next();
-
-                outputBadge = new Badge(resultsSet.getString("id"), resultsSet.getString("description"));
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return outputBadge;
-
-    }
-
-    public Shift getShift(int shiftid) {
-
-        Shift outputShift = null;
-
-        try {
-
-            query = "SELECT * FROM shift WHERE id = ?";
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setInt(1, shiftid);
-
-            boolean hasResults = prstSelect.execute();
-
-            if (hasResults) {
-                ResultSet resultsSet = prstSelect.getResultSet();
-                resultsSet.next();
-
-                ShiftParameters params = new ShiftParameters();
-
-                params.setDescription(resultsSet.getString("description"));
-                params.setStart(LocalTime.parse(resultsSet.getString("start")));
-                params.setStop(LocalTime.parse(resultsSet.getString("stop")));
-                params.setInterval(resultsSet.getInt("interval"));
-                params.setGraceperiod(resultsSet.getInt("graceperiod"));
-                params.setDock(resultsSet.getInt("dock"));
-                params.setLunchstart(LocalTime.parse(resultsSet.getString("lunchstart")));
-                params.setLunchstop(LocalTime.parse(resultsSet.getString("lunchstop")));
-                params.setLunchdeduct(resultsSet.getInt("lunchdeduct"));
-                params.setId(shiftid);
-
-                outputShift = new Shift(params);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return outputShift;
-
-    }
-
-    public Shift getShift(Badge badge) {
-        Shift outputShift = null;
-        try {
-
-            query = "SELECT * FROM shift WHERE id = (SELECT shiftid FROM employee WHERE badgeid = ?)";
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setString(1, badge.getID());
-
-            boolean hasResults = prstSelect.execute();
-            if (hasResults) {
-                ResultSet resultsSet = prstSelect.getResultSet();
-                resultsSet.next();
-
-                ShiftParameters params = new ShiftParameters();
-
-                params.setDescription(resultsSet.getString("description"));
-                params.setStart(LocalTime.parse(resultsSet.getString("start")));
-                params.setStop(LocalTime.parse(resultsSet.getString("stop")));
-                params.setInterval(resultsSet.getInt("interval"));
-                params.setGraceperiod(resultsSet.getInt("graceperiod"));
-                params.setDock(resultsSet.getInt("dock"));
-                params.setLunchstart(LocalTime.parse(resultsSet.getString("lunchstart")));
-                params.setLunchstop(LocalTime.parse(resultsSet.getString("lunchstop")));
-                params.setLunchdeduct(resultsSet.getInt("lunchdeduct"));
-                params.setId(resultsSet.getInt("id"));
-
-                outputShift = new Shift(params);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return outputShift;
-    }
-
-    //Feature 2 
-    public int insertPunch(Punch p) {
-
-        int results = 0;
-
-        LocalDateTime time = p.getOriginaltimestamp();
-
-        String badgeid = p.getBadge().getID();
-        int terminalid = p.getTerminalid();
-        PunchType punchtypeid = p.getPunchtype();
-
-        try {
-            query = "INSERT INTO tas_fa21_v1.punch (terminalid, badgeid, originaltimestamp, punchtypeid) VALUES (?, ?, ?, ?)";
-            prstUpdate = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-
-            prstUpdate.setInt(1, terminalid);
-            prstUpdate.setString(2, badgeid);
-            prstUpdate.setTimestamp(3, java.sql.Timestamp.valueOf(time)); // this is now a set to timestamp instead of a string
-            prstUpdate.setInt(4, punchtypeid.ordinal());
-
-            updateCount = prstUpdate.executeUpdate();
-
-            if (updateCount > 0) {
-
-                ResultSet resultset = prstUpdate.getGeneratedKeys();
-
-                if (resultset.next()) {
-                    results = resultset.getInt(1);
+            catch(SQLException e){ System.out.println("Error in getBadge()"); }
+            
+            //Shouldn't be reached with a valid badge ID.
+            return null;
+	}
+	
+	public Shift getShift(int id){ // method of the database class and provide the shift ID as a parameter.
+            Shift outputShift;
+            
+            try{
+               
+                // Prepare select query
+                query = "SELECT * FROM tas.shift WHERE id = " + id;
+                pstSelect = conn.prepareStatement(query);
+               
+                // Execute select query
+                hasresults = pstSelect.execute();
+               
+                while(hasresults || pstSelect.getUpdateCount() != -1 ){
+                    if(hasresults){
+                       
+                        resultset = pstSelect.getResultSet();
+                        resultset.next();
+                       
+                        String description = resultset.getString("description");
+                        LocalTime start = LocalTime.parse(resultset.getString("start"));
+                        LocalTime stop = LocalTime.parse(resultset.getString("stop"));
+                        int interval = resultset.getInt("interval");
+                        int graceperiod = resultset.getInt("graceperiod");
+                        int dock = resultset.getInt("dock");
+                        LocalTime lunchstart = LocalTime.parse(resultset.getString("lunchstart"));
+                        LocalTime lunchstop = LocalTime.parse(resultset.getString("lunchstop"));
+                        int lunchdeduct = resultset.getInt("lunchdeduct");
+                       
+                        outputShift = new Shift(id, description, start, stop, interval, graceperiod, dock, lunchstart, lunchstop, lunchdeduct);
+                       
+                        return outputShift;
+                    }
                 }
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } 
-        return results;
-    }
-
-    public ArrayList<Punch> getDailyPunchList(Badge badge, LocalDate date) {
-
-        ArrayList<Punch> alist = null;
-
-        try {
-            query = "SELECT * FROM punch WHERE badgeid=? AND DATE(originaltimestamp)=?";
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setString(1, badge.getId());
-            prstSelect.setDate(2, java.sql.Date.valueOf(date));
-
-            boolean hasResults = prstSelect.execute();
-
-            if (hasResults) {
-
-                alist = new ArrayList<>();
-
-                ResultSet resultsSet = prstSelect.getResultSet();
-
-                while (resultsSet.next()) {
-
-                    int terminalid = resultsSet.getInt("terminalid");
-                    String badgeid = resultsSet.getString("badgeid");
-                    LocalDateTime originaltimestamp = resultsSet.getTimestamp("originaltimestamp").toLocalDateTime();
-                    int punchtypeid = resultsSet.getInt("punchTypeId");
-
-                    Punch punch = new Punch(terminalid, getBadge(badgeid), punchtypeid, originaltimestamp);
-                    punch.setId(resultsSet.getInt("id"));
-
-                    alist.add(punch);
-
+            catch(SQLException e){System.out.println(e);}
+            
+            //Shouldn't be reached with a valid shift ID.
+            return null;
+	}
+	
+	public Shift getShift(Badge badge){
+            try{
+               
+                // Prepare select query from employee table
+                query = "SELECT * FROM tas.employee WHERE badgeid = \"" + badge.getId() + "\"";
+                pstSelect = conn.prepareStatement(query);
+               
+                // Execute select query
+                hasresults = pstSelect.execute();
+               
+                while(hasresults || pstSelect.getUpdateCount() != -1 ){
+                    if(hasresults){
+                       
+                        resultset = pstSelect.getResultSet();
+                        resultset.next();
+                        
+                        int shiftid = resultset.getInt("shiftid");
+                        
+                        return getShift(shiftid); 
+                    }
+                    
                 }
+                
             }
+            catch(SQLException e){System.out.println(e);}
+            
+            //Shouldn't be reached with a valid badge.
+            return null;
+	}
+        
+        public int insertPunch(Punch p){
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return alist;
-
-    }
-
-    public Absenteeism getAbsenteeism(Badge badge, LocalDate payperiod) {
-        Absenteeism outputAbsenteeism = null;
-        try {
-            //Prepares the query
-            query = "SELECT * FROM absenteeism WHERE badgeid = ? AND payperiod = ?";
-
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setString(1, badge.getId());
-            prstSelect.setDate(2, java.sql.Date.valueOf(payperiod.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))));
-
-            //Executing the query
-            boolean hasResults = prstSelect.execute();
-
-            if (hasResults) {
-                ResultSet resultsSet = prstSelect.getResultSet();
-                resultsSet.next();
-
-                double percentage = resultsSet.getDouble("percentage");
-
-                outputAbsenteeism = new Absenteeism(badge.getId(), payperiod, percentage);
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return outputAbsenteeism;
-    }
-
-    public ArrayList<Punch> getAdjustedDailyPunchList(Badge badge, LocalDate date, Shift s) {
-
-        ArrayList<Punch> alist = null;
-
-        try {
-            query = "SELECT * FROM punch WHERE badgeid=? AND DATE(originaltimestamp)=?";
-            prstSelect = conn.prepareStatement(query);
-            prstSelect.setString(1, badge.getId());
-            prstSelect.setDate(2, java.sql.Date.valueOf(date));
-
-            boolean hasResults = prstSelect.execute();
-
-            if (hasResults) {
-
-                alist = new ArrayList<>();
-
-                ResultSet resultsSet = prstSelect.getResultSet();
-
-                while (resultsSet.next()) {
-
-                    int terminalid = resultsSet.getInt("terminalid");
-                    String badgeid = resultsSet.getString("badgeid");
-                    LocalDateTime originaltimestamp = resultsSet.getTimestamp("originaltimestamp").toLocalDateTime();
-                    int punchtypeid = resultsSet.getInt("punchTypeId");
-
-                    Punch punch = new Punch(terminalid, getBadge(badgeid), punchtypeid, originaltimestamp);
-                    punch.setId(resultsSet.getInt("id"));
-                    punch.adjust(s);
-
-                    alist.add(punch);
-
+            // Extract punch data from the Punch object
+            int terminalid = p.getTerminalid(); 
+            String badgeid = p.getBadgeid();
+            long originalTS = p.getOriginaltimestamp();
+            int punchtypeid = p.getPunchtypeid();
+        
+            // Convert originalTS to a Timestamp string
+            GregorianCalendar ots = new GregorianCalendar();
+            ots.setTimeInMillis(originalTS);
+            String originaltimestamp = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(ots.getTime());
+        
+            // Insert this data into the database as a new punch
+            try {
+                // Prepare Update Query
+                
+                query = "INSERT INTO tas.punch (terminalid, badgeid, originaltimestamp, punchtypeid) VALUES (?, ?, ?, ?)";
+                pstUpdate = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+                pstUpdate.setInt(1, terminalid);
+                pstUpdate.setString(2, badgeid);
+                pstUpdate.setString(3, originaltimestamp);
+                pstUpdate.setInt(4, punchtypeid);
+                
+                // Execute Update Query
+                updateCount = pstUpdate.executeUpdate();
+                
+                // Get New Key
+                if(updateCount > 0){
+                    
+                    resultset = pstUpdate.getGeneratedKeys();
+                    
+                    if (resultset.next()) {
+                        
+                        // Return the id of the new punch (assigned by the database) as an integer
+                        
+                        return resultset.getInt(1);
+                        
+                    }
                 }
+  
             }
+            catch(SQLException e){ System.out.println(e); }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return alist;
-
+            // Not reached with a valid Punch object
+            return -1; 
     }
+        
+        
+        public ArrayList<Punch> getDailyPunchList(Badge badge, long ts) {
+            
+            /* Initialize variables for punches */
+            Punch obj;                                                                  
+            ArrayList<Punch> output = new ArrayList<>();
+            String strbadge = badge.getId();
 
-    public ArrayList<Punch> getPayPeriodPunchList(Badge badge, LocalDate payperiod, Shift s) {
-        ArrayList<Punch> list = new ArrayList<>();
+            /* Get search date for select query */
+            GregorianCalendar gc = new GregorianCalendar();                             
+            gc.setTimeInMillis(ts);                                                     
+            String date = (new SimpleDateFormat("yyyy-MM-dd")).format(gc.getTime());    
 
-        LocalDate beginOfWeek = payperiod.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+            try{
 
-        LocalDate punchDate = beginOfWeek;
-        for (int i = 0; i < DayOfWeek.SUNDAY.getValue(); i++) {
-            list.addAll(getAdjustedDailyPunchList(badge, punchDate, s));
+                /* Prepare SQL query */
+                query = "SELECT * FROM tas.punch WHERE badgeid = ? AND DATE(originaltimestamp) = ?";
+                pstSelect = conn.prepareStatement(query);
+                pstSelect.setString(1, strbadge);
+                pstSelect.setString(2, date);
+                
+                /* Execute query */
+                hasresults = pstSelect.execute();
+                
+               while(hasresults || pstSelect.getUpdateCount() != -1 ){
+                    if(hasresults){
+                        
+                        resultset = pstSelect.getResultSet();
+                  
+                        while(resultset.next()){
+                            
+                            int terminalid = resultset.getInt("terminalid");
+                            int punchtypeid = resultset.getInt("punchtypeid");
+                            
+                            obj = new Punch(badge, terminalid, punchtypeid);
+                            obj.setId(resultset.getInt("id"));
+                            obj.setOriginalTimeStamp(resultset.getTimestamp("originaltimestamp").getTime());
+                            
+                            output.add(obj);                             
+                        }
 
-            punchDate = punchDate.plusDays(1);
+                    } 
+                    else {
+                       updateCount = pstSelect.getUpdateCount();
+                       if(updateCount == -1){
+                           break;
+                        }
+                   }
+                    hasresults = pstSelect.getMoreResults();   
+                }
+                
+           }
+            catch(SQLException e){ System.out.println(e); }
+            
+            return output;
         }
-
-        return list;
-    }
-
-    public void insertAbsenteeism(Absenteeism absenteeism) {
-
-        // Get badge id, payperiod, and percentage from absenteeism object
-        String badgeid = absenteeism.getBadgeid();
-        LocalDateTime payperiod = absenteeism.getPayperiod();
-        Double percentage = absenteeism.getPercentage();
-
-        try {
-            query = "INSERT INTO tas_fa21_v1.absenteeism (badgeid, payperiod, percentage) VALUES (?, ?, ?)";
-            prstUpdate = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-
-            prstUpdate.setString(1, badgeid);
-            prstUpdate.setTimestamp(2, java.sql.Timestamp.valueOf(payperiod));
-            prstUpdate.setDouble(3, percentage);
-
-            // Execute the query
-            updateCount = prstUpdate.executeUpdate();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+        
 }
