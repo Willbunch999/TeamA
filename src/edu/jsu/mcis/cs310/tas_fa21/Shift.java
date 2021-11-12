@@ -25,12 +25,8 @@ public class Shift {
     private LocalTime lunchStop;
     private int lunchDeduct;
         
-    public Shift(){
-            
-    }
-        
-    public void setID(){
-            
+    public void setID(int id){
+        this.id = id;
     }
         
     public void setDescription(String description){
@@ -67,6 +63,14 @@ public class Shift {
         
     public void setLunchDeduct(int lunchDeduct){
         this.lunchDeduct = lunchDeduct;
+    }
+    
+    public void setLunchDuration(LocalTime lunchDuration){
+        this.lunchDuration = lunchDuration;
+    }
+    
+    public void setShiftDuration(LocalTime shiftDuration){
+        this.shiftDuration = shiftDuration;
     }
         
     public int getID(){
@@ -108,9 +112,19 @@ public class Shift {
     public int getLunchDeduct(){
         return lunchDeduct;
     }
+    
+    public LocalTime getShiftDuration(){
+        return shiftDuration;
+    }
+    
+    public LocalTime getLunchDuration(){
+        return lunchDuration;
+    }
         
     @Override
     public String toString(){
-        return "";
+        return description + ": " + start + " - " + stop + " (" + shiftDuration
+                + "); Lunch: " + lunchStart + " - " + lunchStop + " (" 
+                + lunchDuration + ")";
     }
 }
