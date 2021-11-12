@@ -19,11 +19,24 @@ public class Shift {
     private LocalTime start;
     private LocalTime stop;
     private int interval;
-    private LocalTime gracePeriod;
+    private int gracePeriod;
     private int dock;
     private LocalTime lunchStart;
     private LocalTime lunchStop;
     private int lunchDeduct;
+    
+    public Shift(int id, String description, LocalTime start, LocalTime stop, int interval, int gracePeriod, int dock, LocalTime lunchStart, LocalTime lunchStop, int lunchDeduct){
+        this.id = id;
+        this.description = description;
+        this.start = start;
+        this.stop = stop;
+        this.interval = interval;
+        this.gracePeriod = gracePeriod;
+        this.dock = dock;
+        this.lunchStart = lunchStart;
+        this.lunchStop = lunchStop;
+        this.lunchDeduct = lunchDeduct;
+    }
         
     public void setID(int id){
         this.id = id;
@@ -45,7 +58,7 @@ public class Shift {
         this.interval = interval;
     }
         
-    public void setGracePeriod(LocalTime gracePeriod){
+    public void setGracePeriod(int gracePeriod){
         this.gracePeriod = gracePeriod;
     }
         
@@ -93,7 +106,7 @@ public class Shift {
         return interval;
     }
         
-    public LocalTime getGracePeriod(){
+    public int getGracePeriod(){
         return gracePeriod;
     }
         
