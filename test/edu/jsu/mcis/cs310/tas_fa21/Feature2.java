@@ -35,10 +35,10 @@ public class Feature2 {
 		
         /* Get Punch Properties */
         
-        String badgeid = p1.getBadge().getId();
+        String badgeid = p1.getBadgeid().getId();
         ots = p1.getOriginaltimestamp();
         int terminalid = p1.getTerminalid();
-        PunchType punchtype = p1.getPunchtype();
+        PunchType punchtype = p1.getPunchtypeid();
 		
         /* Insert Punch Into Database */
         
@@ -50,12 +50,12 @@ public class Feature2 {
 		
         /* Compare Punches */
 
-        assertEquals(badgeid, p2.getBadge().getId());
+        assertEquals(badgeid, p2.getBadgeid().getId());
         
         rts = p2.getOriginaltimestamp();
         
         assertEquals(terminalid, p2.getTerminalid());
-        assertEquals(punchtype, p2.getPunchtype());
+        assertEquals(punchtype, p2.getPunchtypeid());
         assertEquals(ots.format(dtf), rts.format(dtf));
         
     }
