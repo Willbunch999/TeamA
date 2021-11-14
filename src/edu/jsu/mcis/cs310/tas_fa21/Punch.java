@@ -2,9 +2,10 @@ package edu.jsu.mcis.cs310.tas_fa21;
 
 
 import java.sql.*;
-import java.time.LocalTime;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 /**
  *
@@ -15,26 +16,26 @@ public class Punch {
     
     private int id;
     private int terminalid;
-    private String badgeid;
-    private int punchtypeid;
-    private long originaltimestamp;
-    private String adjustedtimestamp;
+    private Badge badgeid;
+    private PunchType punchtypeid;
+    private LocalDateTime originaltimestamp;
+    private LocalDateTime adjustedtimestamp;
     private String adjustmenttype;
     
     /**
      *
      * @param terminalid
-     * @param badge
+     * @param badgeid
      * @param punchtypeid
      */
-    public Punch(int terminalid, Badge badge, int punchtypeid){
+    public Punch(int terminalid, Badge badgeid, int punchtypeid){
     
     this.badgeid = badgeid;
     this.terminalid = terminalid;
-    this.punchtypeid = punchtypeid;
+    this.punchtypeid = PunchType.values()[punchtypeid];
     this.id = 0;
-    this.originaltimestamp = System.currentTimeMillis();
-    this.adjustedtimestamp = null;
+    this.originaltimestamp = LocalDateTime.now();
+    this.adjustedtimestamp = LocalDateTime.now();
     this.adjustmenttype = null;
   }
     
@@ -45,7 +46,7 @@ public class Punch {
     public Punch(String badge, int terminalid, int punchtypeid) {
         this.badgeid = badgeid;
         this.terminalid = terminalid;
-        this.punchtypeid = punchtypeid;
+        this.punchtypeid = PunchType.values()[punchtypeid];;
         
         
     }
@@ -54,7 +55,7 @@ public class Punch {
      *
      * @return
      */
-    public String getBadgeid() {
+    public Badge getBadgeid() {
         return badgeid;
   }
   
@@ -78,7 +79,7 @@ public class Punch {
      *
      * @return
      */
-    public long getOriginaltimestamp(){
+    public LocalDateTime getOriginaltimestamp(){
       return originaltimestamp;
   }
   
@@ -94,18 +95,39 @@ public class Punch {
      *
      * @return
      */
-    public int getPunchtypeid(){
+    public PunchType getPunchtypeid(){
       return punchtypeid;
   }
-  
-    /**
+    
+    public LocalDateTime getAdjustedTimestamp(){
+        return adjustedtimestamp;
+    }
+    
+    public void setBadge(Badge badgeid){
+        this.badgeid = badgeid;
+    }
+            
+   /**
      *
      * @param id
      */
     public void setID(int id) {
       this.id = id;
   }
-   
+    
+    public void setTerminalid(int terminalid){
+        this.terminalid = terminalid;
+    }
+    
+     /**
+     *
+     * @param originaltimestamp
+     */
+    
+    public void setOriginalTimeStamp(LocalDateTime originaltimestamp) {
+      this.originaltimestamp = originaltimestamp;
+  }
+    
     /**
      *
      * @param adjustmenttype
@@ -113,89 +135,10 @@ public class Punch {
     public void setAdjustmenttype( String adjustmenttype){
       this.adjustmenttype = adjustmenttype; 
   }
-  
-    /**
-     *
-     * @param neworiginaltimestamp
-     */
-    public void setOriginalTimeStamp(Long neworiginaltimestamp) {
-      this.originaltimestamp = neworiginaltimestamp;
-  }
-     
-    public String printAdjustedTimestamp(){
-        return adjustedtimestamp;
-    }
-    
-    public void setAdjustedTimestamp(String adjustedtimestamp){
-        this.adjustedtimestamp = adjustedtimestamp;
-    }
-    
-    /**
-     *
-     * @return
-     */
-    public String printOriginalTimeStamp(){
-      GregorianCalender gc = new GregorianCalender();
-      StringBulder sb = new StringBuilder();
-      gc.setTimeInMillis(OringinalTimeStamp);
-      SimpleDateFormat sdf = new SimpleDateFormat("EEE MM/dd/yyyy HH:mm:ss");
-      
-      sb.append("#").append(badgeid);
-      
-      switch (punchtypeid) {
-          
-          case 0:
-              sb.append(" CLOCKED OUT: ");
-              break;
-              
-          case 1:
-              sb.append(" CLOCKED IN: ");
-              break;
-          
-          case 2:
-              sb.append(" TIMED OUT: ");
-              break;
-              
-          default:
-              sb.append(" ERROR ");
-              break;
-      }
-        String ots = sdf.format(gc.getTime());
-        sb.append(ots);
-        
-        return (sb.toString().toUpperCase());
-    }
-      
-       public String adjustTimestamp(GregorianCalendar gc, adjustmentnote){ 
-           
-        StringBuilder sb = new StringBuilder();
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MM/dd/yyyy HH:mm:ss");
-        
-        sb.append("#").append(badgeid);
 
-        switch (punchtypeid) {
-            case 0:
-                sb.append(" CLOCKED OUT: ");
-                break;
-            case 1:
-                sb.append(" CLOCKED IN: ");
-                break;
-            case 2:
-                sb.append(" TIMED OUT: ");
-                break;
-            default:
-                sb.append(" ERROR ");
-                break;
-        }
-        
-        String ots = sdf.format(gc.getTime()).toUpperCase();
-        sb.append(ots);
-        sb.append(" ").append(adjustmentnote);
-
-        return (sb.toString());
-      }
-       
-       public void adjust (Shift s){
+    
+    
+    public void adjust (Shift s){
         
            
       
