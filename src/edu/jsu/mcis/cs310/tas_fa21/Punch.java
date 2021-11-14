@@ -6,6 +6,8 @@ import java.util.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalField;
+import java.time.temporal.WeekFields;
 
 /**
  *
@@ -40,14 +42,14 @@ public class Punch {
   }
     
     /*
-       new punch
+        punch
      */
     
-    public Punch(String badge, int terminalid, int punchtypeid) {
+    public Punch(int punchtypeid, Badge badgeid, int terminalid, LocalDateTime originaltimestamp){
+        this.punchtypeid = PunchType.values()[punchtypeid];
         this.badgeid = badgeid;
         this.terminalid = terminalid;
-        this.punchtypeid = PunchType.values()[punchtypeid];;
-        
+        this.originaltimestamp = originaltimestamp;
         
     }
 
@@ -135,23 +137,52 @@ public class Punch {
     public void setAdjustmenttype( String adjustmenttype){
       this.adjustmenttype = adjustmenttype; 
   }
-
+    
+    public String printAdjusted(){
+        StringBuilder s = new StringBuilder();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE" + " LL/dd/uuuu HH:mm:ss");
+        
+        s.append('#').append(badgeid.getId()).append(" ").append(punchtypeid);
+        s.append(": ").append(formatter.format(adjustedtimestamp).toUppperCase());
+        s.append(" (").append(adjustmenttype).append(")");
+        System.out.println(s);
+        
+        return s.toString();
+                
+    }
+    
+    public String printOriginal(){
+        StringBuilder s = new StringBuilder();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE" + " LL/dd/uuuu HH:mm:ss");
+        
+        s.append('#').append(badgeid.getId()).append(" ").append(punchtypeid);
+        s.append(": ").append(formatter.format(originaltimestamp).toUppperCase());
+        System.out.println(s.toString());
+        
+        return s.toString();
+           
+    }
     
     
-    public void adjust (Shift s){
+    public void adjust(Shift s){
+        TemporalField usWeekDay = WeekFields.of(Locale.US).dayOfWeek();
+        
+        LocalDateTime Start = s.getStart().atDate(originaltimestamp.toLocalDate());
+        LocalDateTime Stop = s.getStop().atDate(originaltimestamp.toLocalDate());
+        
+        LocalDateTime lunchStart = s.getLunchStart().atDate(originaltimestamp.toLocalDate());
+        LocalDateTime lunchStop = s.getLunchStop().atDate(originaltimestamp.toLocalDate());
+        
+        
+        
+        int dayofweek = originaltimestamp.get(usWeekDay);
         
            
       
       
   }
   
-    /**
-     *
-     * @return
-     */
-    public String printOriginal(){
-        return "#" + badgeid + " " + punchtypeid + ": " + originaltimestamp;
-    }
+   
   
 }
   
