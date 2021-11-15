@@ -18,7 +18,7 @@ public class Punch {
     
     private int id;
     private int terminalid;
-    private Badge badgeid;
+    private String badgeid;
     private PunchType punchtypeid;
     private LocalDateTime originaltimestamp;
     private LocalDateTime adjustedtimestamp;
@@ -30,7 +30,7 @@ public class Punch {
      * @param badgeid
      * @param punchtypeid
      */
-    public Punch(int terminalid, Badge badgeid, int punchtypeid){
+    public Punch(int terminalid, String badgeid, int punchtypeid){
     
     this.badgeid = badgeid;
     this.terminalid = terminalid;
@@ -45,7 +45,7 @@ public class Punch {
         punch
      */
     
-    public Punch(int punchtypeid, Badge badgeid, int terminalid, LocalDateTime originaltimestamp){
+    public Punch(int punchtypeid, String badgeid, int terminalid, LocalDateTime originaltimestamp){
         this.punchtypeid = PunchType.values()[punchtypeid];
         this.badgeid = badgeid;
         this.terminalid = terminalid;
@@ -57,7 +57,7 @@ public class Punch {
      *
      * @return
      */
-    public Badge getBadgeid() {
+    public String getBadgeid() {
         return badgeid;
   }
   
@@ -105,7 +105,7 @@ public class Punch {
         return adjustedtimestamp;
     }
     
-    public void setBadge(Badge badgeid){
+    public void setBadge(String badgeid){
         this.badgeid = badgeid;
     }
             
@@ -142,8 +142,8 @@ public class Punch {
         StringBuilder s = new StringBuilder();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE" + " LL/dd/uuuu HH:mm:ss");
         
-        s.append('#').append(badgeid.getId()).append(" ").append(punchtypeid);
-        s.append(": ").append(formatter.format(adjustedtimestamp).toUppperCase());
+        s.append('#').append(badgeid).append(" ").append(punchtypeid);
+        s.append(": ").append(formatter.format(adjustedtimestamp).toUpperCase());
         s.append(" (").append(adjustmenttype).append(")");
         System.out.println(s);
         
@@ -155,8 +155,8 @@ public class Punch {
         StringBuilder s = new StringBuilder();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE" + " LL/dd/uuuu HH:mm:ss");
         
-        s.append('#').append(badgeid.getId()).append(" ").append(punchtypeid);
-        s.append(": ").append(formatter.format(originaltimestamp).toUppperCase());
+        s.append('#').append(badgeid).append(" ").append(punchtypeid);
+        s.append(": ").append(formatter.format(originaltimestamp).toUpperCase());
         System.out.println(s.toString());
         
         return s.toString();

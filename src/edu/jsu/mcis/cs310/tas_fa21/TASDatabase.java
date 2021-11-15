@@ -62,7 +62,7 @@ public class TASDatabase {
                 int terminalid = resultset.getInt("terminalid");
                 LocalDateTime originaltimestamp = resultset.getTimestamp("originaltimestamp").toLocalDateTime();
  
-                outputpunch = new Punch(punchtypeid, getBadge(badgeid), terminalid, originaltimestamp);
+                punch = new Punch(punchtypeid, badgeid, terminalid, originaltimestamp);
                 
             }
             
@@ -105,20 +105,20 @@ public class TASDatabase {
             boolean hasresult = pstSelect.execute();
             if(hasresult) {
                 System.err.println("Getting shift data. ");
-                ResultSet resultset = pstSelect.getResultSet();
-                resultset.first();
+                ResultSet rs = pstSelect.getResultSet();
+                rs.first();
                 
-                String description = resultset.getString("description");
-                LocalTime Start = LocalTime.parse(resultset.getString("start"));
-                LocalTime Stop = LocalTime.parse(resultset.getString("stop"));
-                int interval = resultset.getInt("interval");
-                int gracePeriod = resultset.getInt("graceperiod");
-                int dock = resultset.getInt("dock");
+                String description = rs.getString("description");
+                LocalTime Start = LocalTime.parse(rs.getString("start"));
+                LocalTime Stop = LocalTime.parse(rs.getString("stop"));
+                int interval = rs.getInt("interval");
+                int gracePeriod = rs.getInt("graceperiod");
+                int dock = rs.getInt("dock");
                 
-                LocalTime lunchStart = LocalTime.parse(resultset.getString("lunchstart"));
-                LocalTime lunchStop = LocalTime.parse(resultset.getString("lunchstop"));
+                LocalTime lunchStart = LocalTime.parse(rs.getString("lunchstart"));
+                LocalTime lunchStop = LocalTime.parse(rs.getString("lunchstop"));
                 
-                int LunchDeduct = resultset.getInt("lunchdeduct");
+                int LunchDeduct = rs.getInt("lunchdeduct");
 
                 
                 outputshift = new Shift(shiftID, description, Start, Stop, interval, gracePeriod, dock, lunchStart, lunchStop, LunchDeduct);
@@ -137,8 +137,8 @@ public class TASDatabase {
         
         try {
             pstSelect = conn.prepareStatement("SELECT employee.shiftid, shift.* FROM employee, shift WHERE employee.shiftid = shift.id AND employee.badgeid = ?");
-            pstSelect.setString(1, b.getId());
-            pstSelect.setString(2,   badge.getId());
+            pstSelect.setString(1, b.getBadgeid());
+            pstSelect.setString(2, b.getBadgeid());
             
             boolean hasresult = pstSelect.execute();
              
@@ -159,7 +159,7 @@ public class TASDatabase {
                 LocalTime lunchStop = LocalTime.parse(resultset.getString("lunchstop"));
                 int LunchDeduct = resultset.getInt("lunchdeduct");
 
-                s = new Shift(description, Start, Stop, interval, gracePeriod, dock, lunchStart, lunchStop, LunchDeduct);
+                s = new Shift(shiftID, description, Start, Stop, interval, gracePeriod, dock, lunchStart, lunchStop, LunchDeduct);
                 }
               
             }
@@ -181,9 +181,9 @@ public class TASDatabase {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime originalTime = p.getOriginaltimestamp();
         
-        String badgeid = p.getBadge().getId();
+        String badgeid = p.getBadgeid().toString();
         int terminalid = p.getTerminalid(); 
-        PunchType punchtypeid = p.getPunchtype();
+        PunchType punchtypeid = p.getPunchtypeid();
         
         try {
             //prepare for the query
@@ -216,13 +216,13 @@ public class TASDatabase {
     public ArrayList<Punch> getDailyPunchList(Badge badge, LocalDate date) {
 
         ArrayList<Punch> list = null;
-        Punch obj; 
+        Punch punch = null; 
         list = new ArrayList<>(); 
-        String strbadge = badge.getId();
+        String strbadge = badge.getBadgeid();
         try {
             String query = "SELECT * FROM punch WHERE badgeid=? AND DATE(originaltimestamp)=?";
             pstSelect = conn.prepareStatement(query);
-            pstSelect.setString(1, badge.getId());
+            pstSelect.setString(1, badge.getBadgeid());
             pstSelect.setDate(2, java.sql.Date.valueOf(date));
             
             
@@ -242,8 +242,8 @@ public class TASDatabase {
                     LocalDateTime originaltimestamp = resultsSet.getTimestamp("originaltimestamp").toLocalDateTime();
                     int punchtype = resultsSet.getInt("punchTypeId");
                     
-                    Punch punchlist = new Punch(id, terminalid, badgeid, originaltimestamp, punchtype);
-                    punch.setId(resultsSet.getInt("id"));
+                    Punch punchlist = new Punch(punchtype, badgeid, terminalid, originaltimestamp);
+                    punch.setID(resultsSet.getInt("id"));
                     
                     list.add(punchlist);
                 }

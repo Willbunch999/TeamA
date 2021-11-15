@@ -31,9 +31,9 @@ public class TAS {
             if (punchID.toString() != "TIME OUT"){
                 try{
                     if ("CLOCK IN".equals(punchID.toString())){
-                        shift.setStart(punch.getOriginalTimeStamp().toLocalTime());
+                        shift.setStart(punch.getOriginaltimestamp().toLocalTime());
                     } else if ("CLOCK OUT".equals(punchID.toString())){
-                        shift.setStop(punch.getOriginalTimeStamp().toLocalTime());
+                        shift.setStop(punch.getOriginaltimestamp().toLocalTime());
                     }  
                 }
                 catch(Exception e){}
@@ -53,12 +53,12 @@ public class TAS {
             HashMap<String, String> punchData = new HashMap<>();
             
             punchData.put("id", String.valueOf(punch.getId()));
-            punchData.put("badgeid", String.valueOf(punch.getBadge().getId()));
+            punchData.put("badgeid", String.valueOf(punch.getBadgeid()));
             punchData.put("terminalid", String.valueOf(punch.getTerminalid()));
-            punchData.put("punchtype", String.valueOf(punch.getPunchtype()));
+            punchData.put("punchtype", String.valueOf(punch.getPunchtypeid()));
             punchData.put("adjustmenttype", String.valueOf(punch.getAdjustmenttype()));
             punchData.put("originaltimestamp", String.valueOf(punch.getOriginaltimestamp().format(format).toUpperCase()));
-            punchData.put("adjustedtimestamp", String.valueOf(punch.getAdjustedtimestamp().format(format).toUpperCase()));
+            punchData.put("adjustedtimestamp", String.valueOf(punch.getAdjustedTimestamp().format(format).toUpperCase()));
             jsonData.add(punchData);
             
         }
@@ -68,5 +68,4 @@ public class TAS {
         System.out.println(json);
         return json;
     }
-}
 }
